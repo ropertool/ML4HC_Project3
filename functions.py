@@ -1,10 +1,22 @@
 ########## import all required libraries ############
 
-from stop_words import get_stop_words  # could also use the nltk one, I cannot download any package from there somehow
+# could also use the nltk one, I cannot download any package from there somehow
+from stop_words import get_stop_words
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras.preprocessing.text import Tokenizer
 from nltk.stem.wordnet import WordNetLemmatizer
+
+########## Global Variables ###########
+
+# Define the stop_words library as english
+stop_words = get_stop_words('english')
+
+# Define a string with all punctuations
+punctuations = '''!()-[]{};:'"\,=<>./?@#$%^&*_~'''
+
+# create a list of the possible lables
+labels = ["background", "objective", "methods", "results", "conclusions"]
 
 
 ########## Functions used for data cleaning. ###########
@@ -77,9 +89,11 @@ def remove_singles(list):
 
 # Function to perform lemmatization on the text. The lemmatizer needs to be defined elsewhere
 def lemmatizer(list):
+    # Define the lemmatizer as the WordNetLemmatizer from NLTK
+    my_lemmatizer = WordNetLemmatizer()
     output = []
     for word in list:
-        new_word = lemmatizer.lemmatize(word)
+        new_word = my_lemmatizer.lemmatize(word)
         output.append(new_word)
     return output
 
@@ -107,22 +121,33 @@ def preprocess_text(text):
 
         # select only the relevant parts of the text
         if len(splitted) > 0:  # ignores all empty lines
-            if splitted[0] not in labels:  # ignores all sentences that does not start with a predifined label
+            # ignores all sentences that does not start with a predifined label
+            if splitted[0] not in labels:
                 continue
 
             else:
                 # split the sentence into its label and the sentence:
                 label = splitted[0]  # takes the first word as the label
-                labelnum = labels.index(label)  # assigns the index value from the labels list to the label.
-                sentence = splitted[2:]  # selects the rest of the words in the line as the sentence
+                # assigns the index value from the labels list to the label.
+                labelnum = labels.index(label)
+                # selects the rest of the words in the line as the sentence
+                sentence = splitted[2:]
 
                 # Actual filtering of the words, order is important
-                after_stop_words = [word for word in sentence if not word in stop_words]  # removes all the stop-words
-                after_symbols = special_symbol_replacer(after_stop_words)  # replaces meaningful symbols for text
-                after_punct = [word for word in after_symbols if not word in punctuations]  # removes all punctuations
-                after_dash = handle_dash(after_punct)  # handles all - dash situations
-                removed_singles = remove_singles(after_dash)  # removes single letter words
-                removed_empty = [word for word in removed_singles if not len(word) == 0]  # removes empty strings
+                # removes all the stop-words
+                after_stop_words = [
+                    word for word in sentence if not word in stop_words]
+                # replaces meaningful symbols for text
+                after_symbols = special_symbol_replacer(after_stop_words)
+                # removes all punctuations
+                after_punct = [
+                    word for word in after_symbols if not word in punctuations]
+                # handles all - dash situations
+                after_dash = handle_dash(after_punct)
+                removed_singles = remove_singles(
+                    after_dash)  # removes single letter words
+                removed_empty = [word for word in removed_singles if not len(
+                    word) == 0]  # removes empty strings
                 clean_words = handle_nums(removed_empty)  # handles all numbers
                 # clean_words = lemmatizer(clean_words)                                      # Use wordnet lemmatizer (does not work for me)
 
@@ -130,4 +155,3 @@ def preprocess_text(text):
             output_labels.append(labelnum)
             output_sentences.append(clean_words)
     return output_labels, output_sentences
-
