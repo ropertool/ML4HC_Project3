@@ -13,7 +13,7 @@ from functions import preprocess_text
 
 # Load the data from the location locally
 
-path = "./PubMed_200k_RCT"
+path = "../PubMed_200k_RCT"
 
 
 # Returns [labels, sentences] pair. set type: 'test', 'dev' or 'train'
