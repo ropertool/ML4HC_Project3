@@ -13,14 +13,41 @@ from functions import preprocess_text
 
 # Load the data from the location locally
 
-path = "../PubMed_200k_RCT"
-
+path = "./PubMed_200k_RCT"
 
 # Returns [labels, sentences] pair. set type: 'test', 'dev' or 'train'
-def get_data(set_type):
-    with open(join(path, 'train.txt'), "r") as f:
+
+
+def preprocess_and_save(set_type):
+    with open(join(path, '{}.txt'.format(set_type)), "r") as f:
         data = f.readlines()
-    return preprocess_text(data)
+
+    labels, text = preprocess_text(data)
+
+    # file_text = open("./preprocessed/{}_text.txt".format(set_type), "w")
+    # file_labels = open("./preprocessed/{}_labels.txt".format(set_type), "w")
+
+    # for sentence, label in zip(text, labels):
+    #     file_text.write(' '.join(sentence) + "\n")
+    #     file_labels.write(str(label) + ", ")
+
+    # file_text.close()
+    # file_labels.close()
+    return labels, text
+
+
+# Save preprocessed text and labels
+# print('Preprocessing train data...', end=' ', flush=True)
+# preprocess_and_save('train')
+# print('done.', flush=True)
+
+# print('Preprocessing test data...', end=' ', flush=True)
+# preprocess_and_save('test')
+# print('done.', flush=True)
+
+# print('Preprocessing dev data...', end=' ', flush=True)
+# preprocess_and_save('dev')
+# print('done.', flush=True)
 
 
 # with open(join(path, 'dev.txt'), "r") as f:
