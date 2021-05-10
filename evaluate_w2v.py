@@ -12,13 +12,16 @@ def eval_w2v(model_path):
 
     analogies = model.wv.evaluate_word_analogies(datapath('questions-words.txt'))
     word_sim = model.wv.evaluate_word_pairs(datapath('wordsim353.tsv'))
+    accuracy = model.accuracy(datapath('questions-words.txt'))
     print('#################')
     print('output from word analogies: ')
     print(analogies)
     print('#################')
     print('output from word pairs: ')
     print(word_sim)
-    return
+    print('#################')
+    print(accuracy)
+    return analogies, word_sim, accuracy
 
 
 def reduce_dimensions(model):
@@ -68,4 +71,4 @@ def visualize_w2v(model_path):
 if __name__ == '__main__':
     model_path = 'word2vec.model'
     eval_w2v(model_path)
-    visualize_w2v(model_path)
+    #visualize_w2v(model_path)
