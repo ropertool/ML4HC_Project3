@@ -17,8 +17,8 @@ path = "./PubMed_200k_RCT"
 
 
 # Returns [labels, sentences] pair. set type: 'test', 'dev' or 'train'
-def get_data(set_type):
-    with open(join(path, 'train.txt'), "r") as f:
+def get_data(set_type='train'):
+    with open(join(path, f'{set_type}.txt'), "r") as f:
         data = f.readlines()
     return preprocess_text(data)
 
