@@ -1,29 +1,11 @@
 from gensim.models import Word2Vec
 from os.path import join
-from preprocessing import preprocess_and_save
+from preprocessing import get_data
 
 # Macroparameters
 vec_size = [50, 100, 150]
 window = [5, 7, 10]
 epochs = [5, 10, 15]
-
-
-def load_data(path, data_set):
-    with open(join(path, '{}_text.txt'.format(data_set)), 'r') as f:
-        lines_text = f.readlines()
-
-    with open(join(path, '{}_labels.txt'.format(data_set)), 'r') as f:
-        lines_labels = f.readlines()
-
-    text = []
-    for line in lines_text:
-        text.append(line.split(' '))
-
-    labels = []
-    for line in lines_text:
-        labels = labels + line.split(', ')
-
-    return labels, text
 
 
 def train_w2V(text, vec_size, window, epochs):
@@ -35,11 +17,8 @@ def train_w2V(text, vec_size, window, epochs):
     print('done.', flush=True)
 
 
-# labels, text = load_data('./preprocessed', 'train')
-# print(len(labels), len(text))
-
 print('Preprocessing train data...', end=' ', flush=True)
-_, text = preprocess_and_save('train')
+_, text = get_data('train')
 print('done.', flush=True)
 
 for v in vec_size:
