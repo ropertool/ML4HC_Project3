@@ -1,15 +1,29 @@
 from preprocessing import get_data
 from gensim.models import Word2Vec
-# import numpy as np
+import numpy as np
 from tensorflow.keras.layers import Dense, LSTM, Embedding
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.initializers import Constant
 from tensorflow.keras.layers.experimental.preprocessing import TextVectorization
+from tensorflow.keras.utils import Sequence
+
+
+class MyGenerator(Sequence):
+    def __init__(self, corpus, labels):
+        self.corpus = corpus
+        self.labels = labels
+
+    def __len__(self):
+        return len(self.labels)
+
+    def __getitem__(self, index):
+        return np.array([self.corpus[index], ]), np.array([self.labels[index], ])
+        # return self.corpus[index*self.batch_size:(index+1)*self.batch_size], self.labels[index*self.batch_size:(index+1)*self.batch_size]
 
 
 def clead_data(labels, corpus):
     for i, s in enumerate(corpus):
-        if len(s) < 3:
+        if len(s) < 15:
             corpus.pop(i)
             labels.pop(i)
     assert(len(labels) == len(corpus))
@@ -29,6 +43,8 @@ labels, corpus = clead_data(labels, corpus)
 labels_valid, corpus_valid = clead_data(labels_valid, corpus_valid)
 # labels_test, corpus_test = clead_data(labels_test, corpus_test)
 print('done', flush=True)
+
+train_generator = MyGenerator(corpus, labels)
 
 # classes = len(np.unique(labels))
 
@@ -51,7 +67,7 @@ model.add(Dense(units=6, activation='softmax'))
 model.compile(optimizer='adam', loss='sparse_categorical_crossentropy')
 
 # Train
-model.fit(x=corpus, y=labels,
-          validation_data=(corpus_valid, labels_valid), epochs=5, batch_size=1)
+model.fit_generator(train_generator, validation_data=(corpus_valid, labels_valid),
+                    epochs=5)
 
 model.save('LSTM_model.h5')
