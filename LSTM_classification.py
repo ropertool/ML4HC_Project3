@@ -1,3 +1,4 @@
+import keras.backend as K
 from preprocessing import get_data
 from gensim.models import Word2Vec
 import numpy as np
@@ -6,8 +7,7 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.initializers import Constant
 from tensorflow.keras.layers.experimental.preprocessing import TextVectorization
 from tensorflow.keras.utils import Sequence
-
-from metrics import f1
+from tensorflow.keras import backend as K
 
 
 class MyGenerator(Sequence):
@@ -21,6 +21,17 @@ class MyGenerator(Sequence):
     def __getitem__(self, index):
         return np.array([self.corpus[index], ]), np.array([self.labels[index], ])
         # return self.corpus[index*self.batch_size:(index+1)*self.batch_size], self.labels[index*self.batch_size:(index+1)*self.batch_size]
+
+
+def f1_metric(y_true, y_pred):
+    true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
+    possible_positives = K.sum(K.round(K.clip(y_true, 0, 1)))
+    predicted_positives = K.sum(K.round(K.clip(y_pred, 0, 1)))
+    precision = true_positives / (predicted_positives + K.epsilon())
+    recall = true_positives / (possible_positives + K.epsilon())
+
+    f1_val = 2*(precision*recall)/(precision+recall+K.epsilon())
+    return f1_val
 
 
 def clead_data(labels, corpus):
@@ -48,15 +59,13 @@ print('done', flush=True)
 
 train_generator = MyGenerator(corpus, labels)
 
-# classes = len(np.unique(labels))
-
 # Load word2vec model
 w2v = Word2Vec.load("trained_models/test.model")
 print('w2v model loaded')
 
 # Define encoder
 encoder = TextVectorization(max_tokens=w2v.wv.vectors.shape[0])
-encoder.adapt(corpus+corpus_valid)
+encoder.adapt(corpus_valid)
 
 # Define the model
 model = Sequential()
@@ -65,9 +74,11 @@ model.add(Embedding(input_dim=w2v.wv.vectors.shape[0], output_dim=w2v.wv.vectors
                     embeddings_initializer=Constant(w2v.wv.vectors), trainable=False, mask_zero=True))
 model.add(LSTM(units=w2v.wv.vectors.shape[1]))
 model.add(Dense(units=64, activation='relu'))
-model.add(Dense(units=6, activation='softmax'))
+model.add(Dense(units=5, activation='softmax'))
+
+
 model.compile(optimizer='adam',
-              loss='sparse_categorical_crossentropy', metrics=f1)
+              loss='sparse_categorical_crossentropy', metrics=[f1_metric])
 
 # Train
 history = model.fit(train_generator, validation_data=(corpus_valid, labels_valid),
