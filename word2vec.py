@@ -3,9 +3,9 @@ from os.path import join
 from preprocessing import preprocess_and_save
 
 # Macroparameters
-vec_size = [50, 100, 150]
-window = [5, 7, 10]
-epochs = [5, 10, 15]
+vec_size = 300 #[50, 100, 150]
+window = 7 #[5, 7, 10]
+epochs = 15 #[5, 10, 15]
 
 
 def load_data(path, data_set):

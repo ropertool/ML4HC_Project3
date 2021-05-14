@@ -12,8 +12,13 @@ from sklearn.metrics import f1_score
 from sklearn.model_selection import GridSearchCV
 from sklearn.svm import SVC
 import pickle
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense
+import tensorflow_addons as tfa
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.utils import class_weight
 
-w2v_model_path = 'models/word2vec_100_5_15.model'
+w2v_model_path = 'models/word2vec_300_7_15.model'
 
 # load w2v model
 w2v_model = Word2Vec.load(w2v_model_path)
@@ -59,7 +64,7 @@ for text, labels in zip([train_text, val_text, test_text], [train_labels, val_la
 
         mean = np.array(feature_vec).mean(axis=0)
         # also get rid of nan means due to only unknown words (example: sentence with 1 word not in dict)
-        if np.shape(mean) != (100,):
+        if np.shape(mean) != (300,):
             delete_labels.append(i)
             continue
 
@@ -106,7 +111,7 @@ def evaluate(model, X, y):
     # samples = f1_score(y, y_pred, average='samples')
     print(f'F1 Score: micro {micro}, macro {macro}, weighted {weighted}')
 
-svc_parameters = {'C': [0.01, 0.1, 1], 'class_weight': ('balanced', None)}
+"""svc_parameters = {'C': [0.01, 0.1, 1], 'class_weight': ('balanced', None)}
 # train a logistic regression and eval it
 svc = SVC(gamma='auto', random_state=0)
 svc_clf = GridSearchCV(svc, svc_parameters, scoring='f1_micro', verbose=5, cv=3)
@@ -115,9 +120,9 @@ print(sorted(svc_clf.cv_results_.keys()), flush=True)
 evaluate(svc_clf, val_vector_text, val_labels)
 evaluate(svc_clf, test_vector_text, test_labels)
 model_name_svc = 'svc.sav'
-pickle.dump(model, open(model_name_svc, 'wb'))
+pickle.dump(model, open(model_name_svc, 'wb'))"""
 
-parameters = {'penalty':('l2', 'l1'), 'C':[0.1, 1, 5]}
+"""parameters = {'penalty':('l2', 'l1'), 'C':[0.1, 1, 5]}
 log_reg = LogisticRegression(solver='liblinear',random_state=0, C=0.1, penalty='l2',max_iter=1000, cv=3)
 clf = GridSearchCV(log_reg, parameters, scoring='f1_micro', verbose=5)
 clf.fit(np.array(train_vector_text), np.array(train_labels))
@@ -127,5 +132,27 @@ print(sorted(clf.cv_results_.keys()), flush=True)
 evaluate(clf, val_vector_text, val_labels)
 evaluate(clf, test_vector_text, test_labels)
 model_name_logreg = 'log_reg.sav'
-pickle.dump(model, open(model_name_logreg, 'wb'))
+pickle.dump(model, open(model_name_logreg, 'wb'))"""
+
+# try neural net 2 fc layewrs
+fc_model = Sequential()
+fc_model.add(Dense(128, input_dim=300, activation='relu'))
+fc_model.add(Dense(64, activation='relu'))
+fc_model.add(Dense(5, activation='softmax'))
+
+fc_model.compile(loss='sparse_categorical_crossentropy', optimizer='adam',
+                 metrics=['accuracy', tfa.metrics.F1Score(num_classes=5,average='weighted')])
+
+class_weights = class_weight.compute_class_weight('balanced',
+                                                 np.unique(train_labels),
+                                                 train_labels)
+print(f'class wieghts: {class_weights}', flush=True)
+
+fc_model.fit(train_text, train_labels, epochs=5, validation_data=(val_text, val_labels),
+             batch_size=64, class_weight=class_weights)
+
+print(fc_model.evaluate(test_text, test_labels), flush=True)
+
+
+
 
