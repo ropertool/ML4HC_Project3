@@ -1,1 +1,4 @@
 PubMed_200k_RCT/*
+.idea/*
+.ipynb_checkpoints/*
+__pycache__/*
