@@ -7,6 +7,8 @@ from tensorflow.keras.initializers import Constant
 from tensorflow.keras.layers.experimental.preprocessing import TextVectorization
 from tensorflow.keras.utils import Sequence
 
+from metrics import f1
+
 
 class MyGenerator(Sequence):
     def __init__(self, corpus, labels):
@@ -23,7 +25,7 @@ class MyGenerator(Sequence):
 
 def clead_data(labels, corpus):
     for i, s in enumerate(corpus):
-        if len(s) < 15:
+        if len(s) < 10:
             corpus.pop(i)
             labels.pop(i)
     assert(len(labels) == len(corpus))
@@ -54,7 +56,7 @@ print('w2v model loaded')
 
 # Define encoder
 encoder = TextVectorization(max_tokens=w2v.wv.vectors.shape[0])
-encoder.adapt(corpus)
+encoder.adapt(corpus+corpus_valid)
 
 # Define the model
 model = Sequential()
@@ -64,10 +66,11 @@ model.add(Embedding(input_dim=w2v.wv.vectors.shape[0], output_dim=w2v.wv.vectors
 model.add(LSTM(units=w2v.wv.vectors.shape[1]))
 model.add(Dense(units=64, activation='relu'))
 model.add(Dense(units=6, activation='softmax'))
-model.compile(optimizer='adam', loss='sparse_categorical_crossentropy')
+model.compile(optimizer='adam',
+              loss='sparse_categorical_crossentropy', metrics=f1)
 
 # Train
-model.fit_generator(train_generator, validation_data=(corpus_valid, labels_valid),
+history = model.fit(train_generator, validation_data=(corpus_valid, labels_valid),
                     epochs=5)
 
 model.save('LSTM_model.h5')
