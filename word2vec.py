@@ -19,8 +19,7 @@ def train_w2V(text, vec_size, window, epochs):
 
 print('Preprocessing train data...', end=' ', flush=True)
 _, text = get_data('train')
-print('done.', flush=True)
-
+split_text = list(map(lambda line: line.split(), text))
 for v in vec_size:
     for w in window:
         for e in epochs:
