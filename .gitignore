@@ -3,4 +3,3 @@ PubMed_200k_RCT/*
 .ipynb_checkpoints/*
 __pycache__/*
 preprocessed/*
-trained_models/*
